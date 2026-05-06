@@ -1,6 +1,6 @@
  import './HomePage.css';
  import './header.css';
- 
+
 const HomePage = () => {
   return (
     <>
@@ -8,9 +8,7 @@ const HomePage = () => {
         <div className="left-section">
           <a href="index.html" className="header-link">
             <img className="logo"
-              src="images/logo-white.png" />
-            <img className="mobile-logo"
-              src="images/mobile-logo-white.png" />
+              src="images/ecommerce_logo.png" />
           </a>
         </div>
 
