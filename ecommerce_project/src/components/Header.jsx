@@ -10,7 +10,7 @@ const Header = () => {
         </a>
       </div>
 
-      <div class="middle-section">
+      <div className="middle-section">
         <input className="search-bar" type="text" placeholder="Search" />
 
         <button className="search-button">
