@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import cart from '../../backend/data/cart'; //Import cart from local mock data file
 import products from '../../backend/data/products';
+import deliveryOptions from '../../backend/data/deliveryOptions';
 import './checkout-header.css';
 import './CheckoutPage.css';
 
@@ -7,12 +9,35 @@ import './CheckoutPage.css';
 const getProduct = (productId) => {
   return products.find((p) => p.id === productId);
 };
+// Helper function to find an option by its id
+const getDeliveryOption = (deliveryOptionId) => {
+  return deliveryOptions.find((d) => d.id === deliveryOptionId);
+};
 //Helper function to convert cents to dollar string
 const formatPrice = (cents) => {
   return `$${(cents / 100).toFixed(2)}`;
 };
+// Helper function to compute a date string from deliveryDays
+const calcDeliveryDate = (deliveryDays) => {
+  const date = new Date();
+  date.setDate(date.getDate() + deliveryDays);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  });
+};
 
 const CheckoutPage = () => {
+  //Initialize selectedDelivery state from each cart item's deliveryOptionId
+  const [selectedDelivery, setSelectedDelivery] = useState(() => {
+    const init = {};
+    cart.forEach((item) => {
+      init[item.productId] = item.deliveryOptionId;
+    });
+    return init;
+  });
+
   return (
     <>
       <title>Checkout</title>
@@ -44,12 +69,14 @@ const CheckoutPage = () => {
             {/* Replace hardcoded cart-item-container blocks with cart.map() */}
             {cart.map((item) => {
               const product = getProduct(item.productId);
+              const currentOptionId = selectedDelivery[item.productId];
+              const currentOption = getDeliveryOption(currentOptionId);
               //Render product image, name, and price dynamically per cart item
               return (
                 /*Use item.productId as React key and item.quantity for quantity label */
                 <div key={item.productId} className="cart-item-container">
                   <div className="delivery-date">
-                    Delivery date: Tuesday, June 21
+                    Delivery date: {calcDeliveryDate(currentOption.deliveryDays)}
                   </div>
 
                   <div className="cart-item-details-grid">
@@ -61,7 +88,7 @@ const CheckoutPage = () => {
                         {product.name}
                       </div>
                       <div className="product-price">
-                        $10.90
+                        {formatPrice(product.priceCents)}
                       </div>
                       <div className="product-quantity">
                         <span>
@@ -80,45 +107,35 @@ const CheckoutPage = () => {
                       <div className="delivery-options-title">
                         Choose a delivery option:
                       </div>
-                      <div className="delivery-option">
-                        <input type="radio" checked
-                          className="delivery-option-input"
-                          name="delivery-option-1" />
-                        <div>
-                          <div className="delivery-option-date">
-                            Tuesday, June 21
-                          </div>
-                          <div className="delivery-option-price">
-                            FREE Shipping
-                          </div>
-                        </div>
-                      </div>
-                      <div className="delivery-option">
-                        <input type="radio"
-                          className="delivery-option-input"
-                          name="delivery-option-1" />
-                        <div>
-                          <div className="delivery-option-date">
-                            Wednesday, June 15
-                          </div>
-                          <div className="delivery-option-price">
-                            $4.99 - Shipping
-                          </div>
-                        </div>
-                      </div>
-                      <div className="delivery-option">
-                        <input type="radio"
-                          className="delivery-option-input"
-                          name="delivery-option-1" />
-                        <div>
-                          <div className="delivery-option-date">
-                            Monday, June 13
-                          </div>
-                          <div className="delivery-option-price">
-                            $9.99 - Shipping
+                      {/* Map over deliveryOptions to render radio buttons per cart item */}
+                      {deliveryOptions.map((option) => (
+                        <div key={option.id} className="delivery-option">
+                          <input
+                            type="radio"
+                            className="delivery-option-input"
+                            name={`delivery-option-${item.productId}`}
+                            checked={currentOptionId === option.id}
+                            onChange={() =>
+                              setSelectedDelivery((prev) => ({
+                                ...prev,
+                                [item.productId]: option.id,
+                              }))
+                            }
+                          />
+                          <div>
+                            {/* Update delivery date label reactively based on selected option */}
+                            <div className="delivery-option-date">
+                              {calcDeliveryDate(option.deliveryDays)}
+                            </div>
+                            <div className="delivery-option-price">
+                              {option.priceCents === 0
+                                ? 'FREE Shipping'
+                                : `${formatPrice(option.priceCents)} - Shipping`
+                              }
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </div>
